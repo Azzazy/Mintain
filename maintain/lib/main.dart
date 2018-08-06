@@ -53,9 +53,7 @@ class MainScreen extends StatelessWidget {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    SessionInfo(session: session)),
+                            MaterialPageRoute(builder: (context) => SessionInfo(session: session)),
                           );
                         },
                         title: Text(
@@ -173,66 +171,61 @@ class WorkItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: new Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-           ListTile(
-            leading: const Icon(Icons.new_releases),
-            title:  Text(job.title),
-            subtitle:
-                const Text('Work details'),
-          ),
-          new ButtonTheme.bar(
-            // make buttons use the appropriate styles for cards
-            child: new ButtonBar(
-              children: <Widget>[
-                new FlatButton(
-                  child: const Text('APPLY'),
-                  onPressed: () {
-                    /* ... */
-                  },
-                ),
-                new FlatButton(
-                  child: const Text('APPLY AS MENTOR'),
-                  onPressed: () {
-                    /* ... */
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-//    return GestureDetector(
-//        onTap: () {
-//          Navigator.push(context,
-//              MaterialPageRoute(builder: (context) => WorkInfo(job: job)));
-//        },
-//        child: Column(
-//          children: <Widget>[
-//            Row(children: <Widget>[
-//              Text(
-//                job.title,
-//              ),
-//              Text(job.deadline.day.toString() +
-//                  '/' +
-//                  job.deadline.month.toString() +
-//                  '/' +
-//                  job.deadline.year.toString())
-//            ]),
-//            Row(
-//              children: <Widget>[Text(job.owner.name), Text(job.owner.address)],
-//            ),
-//            Row(
-//              children: <Widget>[
-//                Text(job.type),
-//                Text(job.duration.toString()),
-//                Text(job.salary.toString())
-//              ],
-//            )
-//          ],
-//        ));
+    return GestureDetector(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => WorkInfo(job: job)));
+        },
+        child: Card(
+          child: Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Column(
+                children: <Widget>[
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
+                    Padding(
+                        padding: new EdgeInsets.all(10.0),
+                        child: Text(
+                          job.title,
+                          style: TextStyle(fontSize: 24.0),
+                        )),
+                    Text(job.deadline.day.toString() + '/' + job.deadline.month.toString() + '/' + job.deadline.year.toString())
+                  ]),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      new Padding(
+                        padding: new EdgeInsets.only(top: 10.0, bottom: 10.0, left: 10.0),
+                        child: Text(
+                          job.owner.name,
+                          style: TextStyle(fontSize: 18.0),
+                        ),
+                      ),
+                      Text(', ' + job.owner.address)
+                    ],
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Padding(
+                          padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
+                          child: Text(
+                            job.type,
+                            style: TextStyle(fontSize: 18.0, color: Colors.yellow),
+                          )),
+                      Padding(
+                          padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
+                          child: Text(
+                            job.duration.toString(),
+                            style: TextStyle(fontSize: 18.0, color: Colors.blueAccent),
+                          )),
+                      Padding(
+                          padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
+                          child: Text(
+                            job.salary.toString(),
+                            style: TextStyle(fontSize: 18.0, color: Colors.blueGrey),
+                          )),
+                    ],
+                  )
+                ],
+              )),
+        ));
   }
 }
