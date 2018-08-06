@@ -6,13 +6,18 @@ void main() {
       50,
       (i) => Job("Job No. $i"),
     ),
+    sessions: List<Session>.generate(
+      50,
+      (i) => Session("Session No. $i"),
+    ),
   ));
 }
 
 class MainScreen extends StatelessWidget {
   final List<Job> jobs;
+  final List<Session> sessions;
 
-  MainScreen({Key key, this.jobs}) : super(key: key);
+  MainScreen({Key key, this.jobs, this.sessions}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,64 +38,38 @@ class MainScreen extends StatelessWidget {
           body: TabBarView(
             children: [
               ListView.builder(
-                  // Let the ListView know how many items it needs to build
                   itemCount: jobs.length,
-                  // Provide a builder function. This is where the magic happens! We'll
-                  // convert each item into a Widget based on the type of item it is.
                   itemBuilder: (context, index) {
                     final job = jobs[index];
+                    return WorkItem(
+                      job: job,
+                    );
+                  }),
+              ListView.builder(
+                  itemCount: sessions.length,
+                  itemBuilder: (context, index) {
+                    final session = sessions[index];
                     return ListTile(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => WorkInfo(job: job)),
+                                builder: (context) =>
+                                    SessionInfo(session: session)),
                           );
                         },
                         title: Text(
-                              job.title +
-                                  ', ' +
-                                  job.deadline.day.toString() +
-                                  '/' +
-                                  job.deadline.month.toString() +
-                                  '/' +
-                                  job.deadline.year.toString(),
-                              style: Theme.of(context).textTheme.headline,
-                            ) ,
+                          session.title,
+                          style: Theme.of(context).textTheme.headline,
+                        ),
                         subtitle: ListTile(
                           title: Text(
-                            job.owner.name + ', ' + job.owner.address,
+                            session.instructor.name,
                             style: Theme.of(context).textTheme.subhead,
                           ),
-                          subtitle: Text(job.type +
-                              ', ' +
-                              job.duration.toString() +
-                              ', ' +
-                              job.salary.toString()),
+                          subtitle: Text(session.details),
                         ));
                   }),
-              ListView(
-                children: <Widget>[
-                  ListTile(
-                    title: Text('Backend developer, unpaid'),
-                    subtitle: Text('Full time, 0-4 years, Computer software'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => WorkInfo()),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.photo_album),
-                    title: Text('Album'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.phone),
-                    title: Text('Phone'),
-                  ),
-                ],
-              ),
               Icon(Icons.person),
             ],
           ),
@@ -109,9 +88,25 @@ class WorkInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Second Screen"),
+        title: Text(job.title + 'details'),
       ),
       body: Center(child: Text(job.title)),
+    );
+  }
+}
+
+class SessionInfo extends StatelessWidget {
+  final Session session;
+
+  SessionInfo({Key key, this.session}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(session.title + ' info'),
+      ),
+      body: Center(child: Text(session.title)),
     );
   }
 }
@@ -146,5 +141,98 @@ class Job {
     this.duration = 15;
     this.deadline = DateTime.now();
     this.type = 'Full time';
+  }
+}
+
+class Individual {
+  String name;
+  String email;
+  String bio;
+
+  Individual() {
+    this.name = "Khaled";
+  }
+}
+
+class Session {
+  String title;
+  Individual instructor;
+  String details;
+
+  Session(title) {
+    this.title = title;
+    this.instructor = Individual();
+    this.details = 'The best ever course you\'ll take in your life';
+  }
+}
+
+class WorkItem extends StatelessWidget {
+  final Job job;
+
+  WorkItem({Key key, this.job}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: new Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+           ListTile(
+            leading: const Icon(Icons.new_releases),
+            title:  Text(job.title),
+            subtitle:
+                const Text('Work details'),
+          ),
+          new ButtonTheme.bar(
+            // make buttons use the appropriate styles for cards
+            child: new ButtonBar(
+              children: <Widget>[
+                new FlatButton(
+                  child: const Text('APPLY'),
+                  onPressed: () {
+                    /* ... */
+                  },
+                ),
+                new FlatButton(
+                  child: const Text('APPLY AS MENTOR'),
+                  onPressed: () {
+                    /* ... */
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+//    return GestureDetector(
+//        onTap: () {
+//          Navigator.push(context,
+//              MaterialPageRoute(builder: (context) => WorkInfo(job: job)));
+//        },
+//        child: Column(
+//          children: <Widget>[
+//            Row(children: <Widget>[
+//              Text(
+//                job.title,
+//              ),
+//              Text(job.deadline.day.toString() +
+//                  '/' +
+//                  job.deadline.month.toString() +
+//                  '/' +
+//                  job.deadline.year.toString())
+//            ]),
+//            Row(
+//              children: <Widget>[Text(job.owner.name), Text(job.owner.address)],
+//            ),
+//            Row(
+//              children: <Widget>[
+//                Text(job.type),
+//                Text(job.duration.toString()),
+//                Text(job.salary.toString())
+//              ],
+//            )
+//          ],
+//        ));
   }
 }
