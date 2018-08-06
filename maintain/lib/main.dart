@@ -1,5 +1,10 @@
+import 'dart:_http';
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
+const String SERVER_URL = 'http://192.168.43.48:3000';
 void main() => runApp(App());
 
 class App extends StatelessWidget {
@@ -22,14 +27,15 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
-  List<Widget> _children = [WorkScreen(jobs:List<Job>.generate(50,(i)=>Job("Job No.$i"))),SessionsScreen(sessions:List<Session>.generate(50,(i)=>Session("Session No.$i"))),ProfileScreen()];
+  List<Widget> _children = [
+    WorkScreen(jobs: List<Job>.generate(50, (i) => Job("Job No.$i"))),
+    SessionsScreen(sessions: List<Session>.generate(50, (i) => Session("Session No.$i"))),
+    ProfileScreen()
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('My Flutter App'),
-      ),
       body: _children[_currentIndex], // new
       bottomNavigationBar: BottomNavigationBar(
         onTap: (int index) {
@@ -93,16 +99,36 @@ class SessionsScreen extends StatelessWidget {
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Profile Working'),
-    );
+    return Column(children: <Widget>[
+//      new Container(
+//          width: 300.0,
+//          height: 300.0,
+//          decoration: new BoxDecoration(
+//              shape: BoxShape.circle,
+//              image: new DecorationImage(
+//                  fit: BoxFit.fill,
+//                  image: new NetworkImage(
+//                      "https://scontent-cai1-1.xx.fbcdn.net/v/t1.0-9/18034115_1272004189584244_372824399076481497_n.jpg?_nc_cat=0&oh=848127cc6ba4c34885bcaf2131fe0b66&oe=5BCCE821")))),
+      FutureBuilder<Individual>(
+          future: fetchIndividual("koko@hot.com", "a7a"),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Text(snapshot.data.about);
+            } else if (snapshot.hasError) {
+              return Text("${snapshot.error}" + "${snapshot.toString()}");
+            }
+
+            // By default, show a loading spinner
+            return CircularProgressIndicator();
+          }),
+    ]);
   }
 }
 
-class WorkInfo extends StatelessWidget {
+class WorkInfoScreen extends StatelessWidget {
   final Job job;
 
-  WorkInfo({Key key, this.job}) : super(key: key);
+  WorkInfoScreen({Key key, this.job}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -115,10 +141,10 @@ class WorkInfo extends StatelessWidget {
   }
 }
 
-class SessionInfo extends StatelessWidget {
+class SessionInfoScreen extends StatelessWidget {
   final Session session;
 
-  SessionInfo({Key key, this.session}) : super(key: key);
+  SessionInfoScreen({Key key, this.session}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -132,45 +158,108 @@ class SessionInfo extends StatelessWidget {
 }
 
 class Organization {
-  String email;
+  String address;
   String website;
   String name;
+  String email;
+  bool isIndi;
   String about;
-  String address;
+  String avatar;
 
-  Organization(name, address) {
-    this.name = name;
-    this.address = address;
+  Organization({this.name, this.email, this.isIndi, this.about, this.avatar, this.website, this.address});
+
+  factory Organization.fromJson(Map<String, dynamic> json) {
+    return Organization(
+      name: json['name'],
+      email: json['email'],
+      isIndi: json['isIndi'],
+      about: json['about'],
+      avatar: json['avatar'],
+      website: json['website'],
+      address: json['address'],
+    );
+  }
+}
+
+//Future<Organization> fetchOrganization(email, password) async {
+//  final response = await http.get(SERVER_URL + '/login/$email/$password');
+//
+//  if (response.statusCode == 200) {
+//    // If the call to the server was successful, parse the JSON
+//    return Organization.fromJson(json.decode(response.body));
+//  } else {
+//    // If that call was not successful, throw an error.
+//    throw Exception('Login failed');
+//  }
+//}
+
+class Individual {
+  String name;
+  String email;
+  String about;
+  String avatar;
+
+  Individual({this.name, this.email, this.about, this.avatar});
+
+  factory Individual.fromJson(Map<String, dynamic> json) {
+    return Individual(
+      name: json['name'],
+      email: json['email'],
+      about: json['about'],
+      avatar: json['avatar'],
+    );
+  }
+}
+
+Future<String> apiRequest(String url, Map jsonMap) async {
+  HttpClient httpClient = new HttpClient();
+  HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
+  request.headers.set('content-type', 'application/json');
+  request.add(utf8.encode(json.encode({"email": "koko@hot.com", "password": "a7a"})));
+  HttpClientResponse response = await request.close();
+  // todo - you should check the response.statusCode
+  String reply = await response.transform(utf8.decoder).join();
+  httpClient.close();
+  return reply;
+}
+
+Future<Individual> fetchIndividual(email, password) async {
+  HttpClient httpClient = new HttpClient();
+  HttpClientRequest request = await httpClient.postUrl(Uri.parse(SERVER_URL + '/auth/login'));
+  request.headers.set('content-type', 'application/json');
+  request.add(utf8.encode(json.encode({"email": email, "password": password})));
+  HttpClientResponse response = await request.close();
+//  final response = await http.post(SERVER_URL + '/auth/login', body: {email: email, password: password});
+  print(response.statusCode);
+  print(response.toString());
+  if (response.statusCode == 200) {
+    // If the call to the server was successful, parse the JSON
+    return Individual.fromJson(json.decode(response.toString()));
+  } else {
+    // If that call was not successful, throw an error.
+    throw Exception('Login failed');
   }
 }
 
 class Job {
   String title;
-  Organization owner;
-  int salary;
-  String details;
-  int duration;
   DateTime deadline;
+  bool paid;
+  Organization owner;
   String type;
+  String exp;
+  int positions;
+  String category;
+  int salary;
+  String description;
 
   Job(title) {
     this.title = title;
-    this.owner = new Organization('Microsoft', 'NYC');
+    this.owner = new Organization(name: 'Microsoft', address: 'NYC');
     this.salary = 1000;
-    this.details = 'Required a very good person for this job';
-    this.duration = 15;
+    this.description = 'Required a very good person for this job';
     this.deadline = DateTime.now();
     this.type = 'Full time';
-  }
-}
-
-class Individual {
-  String name;
-  String email;
-  String bio;
-
-  Individual() {
-    this.name = "Khaled";
   }
 }
 
@@ -181,7 +270,7 @@ class Session {
 
   Session(title) {
     this.title = title;
-    this.instructor = Individual();
+    this.instructor = Individual(name: 'khaled');
     this.details = 'The best ever course you\'ll take in your life';
   }
 }
@@ -195,7 +284,7 @@ class WorkItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => WorkInfo(job: job)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => WorkInfoScreen(job: job)));
         },
         child: Card(
           child: Padding(
@@ -235,12 +324,6 @@ class WorkItem extends StatelessWidget {
                       Padding(
                           padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
                           child: Text(
-                            job.duration.toString(),
-                            style: TextStyle(fontSize: 18.0, color: Colors.blueAccent),
-                          )),
-                      Padding(
-                          padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
-                          child: Text(
                             job.salary.toString(),
                             style: TextStyle(fontSize: 18.0, color: Colors.blueGrey),
                           )),
@@ -252,7 +335,6 @@ class WorkItem extends StatelessWidget {
   }
 }
 
-
 class SessionItem extends StatelessWidget {
   final Session session;
 
@@ -262,7 +344,7 @@ class SessionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => SessionInfo(session: session)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => SessionInfoScreen(session: session)));
         },
         child: Card(
           child: Padding(
