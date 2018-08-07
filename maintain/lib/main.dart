@@ -1,18 +1,22 @@
 import 'dart:_http';
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-const String SERVER_URL = 'http://192.168.43.48:3000';
+const String SERVER_URL = 'http://192.168.8.101:3000';
 void main() => runApp(App());
+
+Individual indi;
+
+int currentState = 0;
 
 class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Flutter App',
-      home: Home(),
+      home: [LoginPage(), Home()][currentState],
     );
   }
 }
@@ -110,16 +114,18 @@ class ProfileScreen extends StatelessWidget {
 //                  image: new NetworkImage(
 //                      "https://scontent-cai1-1.xx.fbcdn.net/v/t1.0-9/18034115_1272004189584244_372824399076481497_n.jpg?_nc_cat=0&oh=848127cc6ba4c34885bcaf2131fe0b66&oe=5BCCE821")))),
       FutureBuilder<Individual>(
-          future: fetchIndividual("koko@hot.com", "a7a"),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return Text(snapshot.data.about);
-            } else if (snapshot.hasError) {
-              return Text("${snapshot.error}" + "${snapshot.toString()}");
+          future: login(indi),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+              case ConnectionState.waiting:
+                return CircularProgressIndicator();
+              default:
+                if (snapshot.hasError)
+                  return new Text('Error: ${snapshot.error}');
+                else
+                  return Text(indi.token);
             }
-
-            // By default, show a loading spinner
-            return CircularProgressIndicator();
           }),
     ]);
   }
@@ -181,64 +187,48 @@ class Organization {
   }
 }
 
-//Future<Organization> fetchOrganization(email, password) async {
-//  final response = await http.get(SERVER_URL + '/login/$email/$password');
-//
-//  if (response.statusCode == 200) {
-//    // If the call to the server was successful, parse the JSON
-//    return Organization.fromJson(json.decode(response.body));
-//  } else {
-//    // If that call was not successful, throw an error.
-//    throw Exception('Login failed');
-//  }
-//}
-
 class Individual {
   String name;
   String email;
   String about;
   String avatar;
+  String token;
+  String password;
 
-  Individual({this.name, this.email, this.about, this.avatar});
+  Individual({this.name, this.email, this.about, this.avatar, this.token, this.password});
 
   factory Individual.fromJson(Map<String, dynamic> json) {
-    return Individual(
-      name: json['name'],
-      email: json['email'],
-      about: json['about'],
-      avatar: json['avatar'],
-    );
+    var indi = Individual(token: json['token']);
+    return indi;
   }
 }
 
-Future<String> apiRequest(String url, Map jsonMap) async {
-  HttpClient httpClient = new HttpClient();
-  HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
+Future<Individual> login(Individual indi) async {
+  HttpClientRequest request = await HttpClient().postUrl(Uri.parse(SERVER_URL + '/auth/login'));
   request.headers.set('content-type', 'application/json');
-  request.add(utf8.encode(json.encode({"email": "koko@hot.com", "password": "a7a"})));
+  request.add(utf8.encode(json.encode({"email": indi.email, "password": indi.password})));
   HttpClientResponse response = await request.close();
-  // todo - you should check the response.statusCode
-  String reply = await response.transform(utf8.decoder).join();
-  httpClient.close();
-  return reply;
-}
-
-Future<Individual> fetchIndividual(email, password) async {
-  HttpClient httpClient = new HttpClient();
-  HttpClientRequest request = await httpClient.postUrl(Uri.parse(SERVER_URL + '/auth/login'));
-  request.headers.set('content-type', 'application/json');
-  request.add(utf8.encode(json.encode({"email": email, "password": password})));
-  HttpClientResponse response = await request.close();
-//  final response = await http.post(SERVER_URL + '/auth/login', body: {email: email, password: password});
-  print(response.statusCode);
-  print(response.toString());
   if (response.statusCode == 200) {
-    // If the call to the server was successful, parse the JSON
-    return Individual.fromJson(json.decode(response.toString()));
+    response.transform(utf8.decoder).listen((body) {
+      indi.token = json.decode(body)['token'];
+      fetchIndividual(indi).then((hi) {});
+    });
   } else {
-    // If that call was not successful, throw an error.
     throw Exception('Login failed');
   }
+}
+
+Future<Individual> fetchIndividual(Individual indi) async {
+  final response = await http.get(
+    SERVER_URL + '/auth/profile',
+    headers: {HttpHeaders.AUTHORIZATION: 'Bearer ' + indi.token},
+  );
+  var data = json.decode(response.body);
+  var type = data['type'];
+  if (type == 'ind') {} else {}
+  print(response.statusCode);
+  print(response.body);
+  currentState = 1;
 }
 
 class Job {
@@ -377,12 +367,95 @@ class SessionItem extends StatelessWidget {
                           padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
                           child: Text(
                             'Place holder', //job.type,
-                            style: TextStyle(fontSize: 18.0, color: Colors.yellow),
+                            style: TextStyle(fontSize: 18.0, color: Colors.green),
                           )),
                     ],
                   )
                 ],
               )),
         ));
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => new _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailText = TextEditingController();
+  final passwordText = TextEditingController();
+  @override
+  Widget build(BuildContext context) {
+    final logo = Hero(
+      tag: 'hero',
+      child: CircleAvatar(
+        radius: 48.0,
+        child: Image.asset('assets/logo.png'),
+      ),
+    );
+
+    final email = TextFormField(
+//      controller: emailText,
+      keyboardType: TextInputType.emailAddress,
+      autofocus: false,
+      initialValue: 'alucard@gmail.com',
+      decoration: InputDecoration(
+        hintText: 'Email',
+        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+      ),
+    );
+
+    final password = TextFormField(
+//      controller: this.passwordText,
+      autofocus: false,
+      initialValue: 'some password',
+      obscureText: true,
+      decoration: InputDecoration(
+        hintText: 'Password',
+        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+      ),
+    );
+
+    final loginButton = Padding(
+      padding: EdgeInsets.symmetric(vertical: 16.0),
+      child: Material(
+        borderRadius: BorderRadius.circular(30.0),
+        shadowColor: Colors.lightBlueAccent.shade100,
+        elevation: 5.0,
+        child: MaterialButton(
+          minWidth: 200.0,
+          height: 42.0,
+          onPressed: () {
+//            indi.password = passwordText.text;
+//            indi.email = emailText.text;
+//            login(indi);
+          },
+          color: Colors.lightBlueAccent,
+          child: Text('Log In', style: TextStyle(color: Colors.white)),
+        ),
+      ),
+    );
+
+    final forgotLabel = FlatButton(
+      child: Text(
+        'Forgot password?',
+        style: TextStyle(color: Colors.black54),
+      ),
+      onPressed: () {},
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: ListView(
+          shrinkWrap: true,
+          padding: EdgeInsets.only(left: 24.0, right: 24.0),
+          children: <Widget>[logo, SizedBox(height: 48.0), email, SizedBox(height: 8.0), password, SizedBox(height: 24.0), loginButton, forgotLabel],
+        ),
+      ),
+    );
   }
 }
