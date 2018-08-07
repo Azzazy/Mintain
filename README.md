@@ -1,8 +1,3 @@
-# maintain
+# mintain
 
-Maintain mobile application
-
-## Getting Started
-
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+Mintain mobile application - using flutter
