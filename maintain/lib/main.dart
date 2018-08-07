@@ -4,19 +4,19 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-const String SERVER_URL = 'http://192.168.8.101:3000';
+const String SERVER_URL = 'http://192.168.43.48:3000';
 void main() => runApp(App());
 
-Individual indi;
-
-int currentState = 0;
+enum AuthState { LOGGED_IN, LOGGED_OUT }
 
 class App extends StatelessWidget {
+  static var ent = new Entity();
+  static var auth = AuthState.LOGGED_OUT;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Flutter App',
-      home: [LoginPage(), Home()][currentState],
+      home: LoginPage(),
     );
   }
 }
@@ -32,7 +32,8 @@ class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
   List<Widget> _children = [
-    WorkScreen(jobs: List<Job>.generate(50, (i) => Job("Job No.$i"))),
+//    WorkScreen(jobs: List<Job>.generate(50, (i) => Job("Job No.$i"))),
+    WorkScreen(),
     SessionsScreen(sessions: List<Session>.generate(50, (i) => Session("Session No.$i"))),
     ProfileScreen()
   ];
@@ -55,7 +56,7 @@ class _HomeState extends State<Home> {
           ),
           new BottomNavigationBarItem(
             icon: Icon(Icons.class_),
-            title: Text('class'),
+            title: Text('Sessions'),
           ),
           new BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile'))
         ],
@@ -65,20 +66,52 @@ class _HomeState extends State<Home> {
 }
 
 class WorkScreen extends StatelessWidget {
-  final List<Job> jobs;
-
-  WorkScreen({Key key, this.jobs}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: jobs.length,
-        itemBuilder: (context, index) {
-          final job = jobs[index];
-          return WorkItem(
-            job: job,
-          );
-        });
+    return new Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(16.0),
+        child: new FutureBuilder<List<Work>>(
+            future: fetchWork(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                case ConnectionState.waiting:
+                  return CircularProgressIndicator();
+                default:
+                  if (snapshot.hasError)
+                    return new Text('Error: ${snapshot.error}');
+                  else {
+                    print("WORK RETIRIVED DONE.");
+                    return ListView.builder(
+                        itemCount: snapshot.data.length,
+                        itemBuilder: (context, index) {
+                          final job = snapshot.data[index];
+                          return WorkItem(
+                            job: job,
+                          );
+                        });
+                  }
+              }
+            }));
+
+//    return Column(
+//      children: <Widget>[
+//        FutureBuilder<List<Work>>(
+//            future: fetchWork(),
+//            builder: (BuildContext context, AsyncSnapshot snapshot) {
+//              if (snapshot.hasData) {
+//                if (snapshot.data!=null) {
+//                  print(snapshot.data);
+//                  Text('ok');
+//                } else {
+//                  return new CircularProgressIndicator();
+//                }
+//              }
+//            }),
+//        Text('Fill space')
+//      ],
+//    );
   }
 }
 
@@ -113,26 +146,26 @@ class ProfileScreen extends StatelessWidget {
 //                  fit: BoxFit.fill,
 //                  image: new NetworkImage(
 //                      "https://scontent-cai1-1.xx.fbcdn.net/v/t1.0-9/18034115_1272004189584244_372824399076481497_n.jpg?_nc_cat=0&oh=848127cc6ba4c34885bcaf2131fe0b66&oe=5BCCE821")))),
-      FutureBuilder<Individual>(
-          future: login(indi),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.none:
-              case ConnectionState.waiting:
-                return CircularProgressIndicator();
-              default:
-                if (snapshot.hasError)
-                  return new Text('Error: ${snapshot.error}');
-                else
-                  return Text(indi.token);
-            }
-          }),
+//      FutureBuilder<Individual>(
+//          future: login(App.indi),
+//          builder: (BuildContext context, AsyncSnapshot snapshot) {
+//            switch (snapshot.connectionState) {
+//              case ConnectionState.none:
+//              case ConnectionState.waiting:
+//                return CircularProgressIndicator();
+//              default:
+//                if (snapshot.hasError)
+//                  return new Text('Error: ${snapshot.error}');
+//                else
+//                  return Text(App.indi.token);
+//            }
+//          }),
     ]);
   }
 }
 
 class WorkInfoScreen extends StatelessWidget {
-  final Job job;
+  final Work job;
 
   WorkInfoScreen({Key key, this.job}) : super(key: key);
 
@@ -163,7 +196,15 @@ class SessionInfoScreen extends StatelessWidget {
   }
 }
 
-class Organization {
+class Entity {
+  String email;
+  String password;
+  String token;
+  String type;
+  Entity({this.email, this.password, this.token, this.type});
+}
+
+class Organization extends Entity {
   String address;
   String website;
   String name;
@@ -173,83 +214,97 @@ class Organization {
   String avatar;
 
   Organization({this.name, this.email, this.isIndi, this.about, this.avatar, this.website, this.address});
-
-  factory Organization.fromJson(Map<String, dynamic> json) {
-    return Organization(
-      name: json['name'],
-      email: json['email'],
-      isIndi: json['isIndi'],
-      about: json['about'],
-      avatar: json['avatar'],
-      website: json['website'],
-      address: json['address'],
-    );
-  }
 }
 
-class Individual {
+class Individual extends Entity {
   String name;
   String email;
   String about;
   String avatar;
-  String token;
-  String password;
 
-  Individual({this.name, this.email, this.about, this.avatar, this.token, this.password});
-
-  factory Individual.fromJson(Map<String, dynamic> json) {
-    var indi = Individual(token: json['token']);
-    return indi;
-  }
+  Individual({this.name, this.email, this.about, this.avatar});
 }
 
-Future<Individual> login(Individual indi) async {
+void login(context) async {
   HttpClientRequest request = await HttpClient().postUrl(Uri.parse(SERVER_URL + '/auth/login'));
   request.headers.set('content-type', 'application/json');
-  request.add(utf8.encode(json.encode({"email": indi.email, "password": indi.password})));
+  request.add(utf8.encode(json.encode({"email": App.ent.email, "password": App.ent.password})));
   HttpClientResponse response = await request.close();
   if (response.statusCode == 200) {
     response.transform(utf8.decoder).listen((body) {
-      indi.token = json.decode(body)['token'];
-      fetchIndividual(indi).then((hi) {});
+      App.ent.token = json.decode(body)['token'];
+      App.auth = AuthState.LOGGED_IN;
+      fetchEntity().then((ent) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Home()),
+        );
+      });
     });
   } else {
     throw Exception('Login failed');
   }
 }
 
-Future<Individual> fetchIndividual(Individual indi) async {
+Future<Entity> fetchEntity() async {
   final response = await http.get(
     SERVER_URL + '/auth/profile',
-    headers: {HttpHeaders.AUTHORIZATION: 'Bearer ' + indi.token},
+    headers: {HttpHeaders.AUTHORIZATION: 'Bearer ' + App.ent.token},
   );
   var data = json.decode(response.body);
   var type = data['type'];
-  if (type == 'ind') {} else {}
-  print(response.statusCode);
-  print(response.body);
-  currentState = 1;
+  if (type == 'ind') {
+    var ind = Individual(email: App.ent.email);
+    ind.token = App.ent.token;
+    return null;
+  } else {
+    var org = Organization(email: App.ent.email);
+    org.token = App.ent.token;
+    return null;
+  }
 }
 
-class Job {
+Future<List<Work>> fetchWork() async {
+  final response = await http.get(
+    SERVER_URL + '/auth/worklist',
+    headers: {HttpHeaders.AUTHORIZATION: 'Bearer ' + App.ent.token},
+  );
+  Map data = json.decode(response.body);
+  List elements = new List();
+  elements.addAll(data.values);
+  List<Work> works = new List<Work>();
+  elements.forEach((e) {
+    works.add(Work.fromJson(e));
+  });
+  return works;
+}
+
+class Work {
   String title;
-  DateTime deadline;
-  bool paid;
+  String postDate;
+  String paid;
   Organization owner;
   String type;
   String exp;
-  int positions;
-  String category;
-  int salary;
+  String salary;
   String description;
+  String id;
+  String vac;
 
-  Job(title) {
-    this.title = title;
-    this.owner = new Organization(name: 'Microsoft', address: 'NYC');
-    this.salary = 1000;
-    this.description = 'Required a very good person for this job';
-    this.deadline = DateTime.now();
-    this.type = 'Full time';
+  Work({this.title, this.owner, this.salary, this.description, this.type, this.paid, this.exp, this.id, this.postDate, this.vac});
+
+  factory Work.fromJson(Map<String, dynamic> json) {
+    return Work(
+      title: json['title'].toString(),
+      id: json['_id'].toString(),
+      type: json['jobType'].toString(),
+      description: json['description'].toString(),
+      salary: json['salary'].toString(),
+      postDate: json['postDate'].toString(),
+      paid: json['paid'].toString(),
+      vac: json['vac'].toString(),
+      owner: Organization(name: json['company']['name'].toString(), address: json['company']['address'].toString()),
+    );
   }
 }
 
@@ -266,7 +321,7 @@ class Session {
 }
 
 class WorkItem extends StatelessWidget {
-  final Job job;
+  final Work job;
 
   WorkItem({Key key, this.job}) : super(key: key);
 
@@ -288,7 +343,6 @@ class WorkItem extends StatelessWidget {
                           job.title,
                           style: TextStyle(fontSize: 24.0),
                         )),
-                    Text(job.deadline.day.toString() + '/' + job.deadline.month.toString() + '/' + job.deadline.year.toString())
                   ]),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -383,10 +437,17 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final emailText = TextEditingController();
-  final passwordText = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    if (App.auth == AuthState.LOGGED_IN) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => Home()),
+      );
+    }
+    final emailText = TextEditingController();
+    final passwordText = TextEditingController();
+
     final logo = Hero(
       tag: 'hero',
       child: CircleAvatar(
@@ -395,22 +456,19 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
 
-    final email = TextFormField(
-//      controller: emailText,
-      keyboardType: TextInputType.emailAddress,
-      autofocus: false,
-      initialValue: 'alucard@gmail.com',
-      decoration: InputDecoration(
-        hintText: 'Email',
-        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
-      ),
-    );
+    var email = TextFormField(
+        controller: emailText,
+        keyboardType: TextInputType.emailAddress,
+        autofocus: false,
+        decoration: InputDecoration(
+          hintText: 'Email',
+          contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        ));
 
     final password = TextFormField(
-//      controller: this.passwordText,
+      controller: passwordText,
       autofocus: false,
-      initialValue: 'some password',
       obscureText: true,
       decoration: InputDecoration(
         hintText: 'Password',
@@ -429,9 +487,9 @@ class _LoginPageState extends State<LoginPage> {
           minWidth: 200.0,
           height: 42.0,
           onPressed: () {
-//            indi.password = passwordText.text;
-//            indi.email = emailText.text;
-//            login(indi);
+            App.ent.password = passwordText.text;
+            App.ent.email = emailText.text;
+            login(context);
           },
           color: Colors.lightBlueAccent,
           child: Text('Log In', style: TextStyle(color: Colors.white)),
