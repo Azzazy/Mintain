@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-const String SERVER_URL = 'http://192.168.8.102:3000';
+const String SERVER_URL = 'http://192.168.43.48:3000';
 const String DEBUG_PASSWORD = 'test';
 const String DEBUG_EMAIL = 'test@test.com';
 
@@ -40,24 +40,33 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _children[_currentIndex], // new
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        }, // new
-        currentIndex: _currentIndex, // new
-        items: [
-          new BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            title: Text('Work'),
-          ),
-          new BottomNavigationBarItem(
-            icon: Icon(Icons.class_),
-            title: Text('Sessions'),
-          ),
-          new BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile'))
-        ],
+      bottomNavigationBar: Theme(
+        data: ThemeData(
+          canvasColor: Colors.blueGrey,
+        ),
+        child: BottomNavigationBar(
+          fixedColor: Colors.green,
+          onTap: (int index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          }, // new
+          currentIndex: _currentIndex, // new
+          items: [
+            new BottomNavigationBarItem(
+              icon: Icon(Icons.work),
+              title: Text(
+                'Work',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            new BottomNavigationBarItem(
+              icon: Icon(Icons.class_),
+              title: Text('Sessions', style: TextStyle(color: Colors.white)),
+            ),
+            new BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile', style: TextStyle(color: Colors.white)))
+          ],
+        ),
       ),
     );
   }
@@ -116,34 +125,127 @@ class SessionsScreen extends StatelessWidget {
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
-        child: Column(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-          Row(
-            children: <Widget>[
-              new Container(
-                  width: 96.0,
-                  height: 96.0,
-                  decoration: new BoxDecoration(shape: BoxShape.circle, image: new DecorationImage(fit: BoxFit.fill, image: new NetworkImage(App.ent.asIndi().picture)))),
-              Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text(
-                    App.ent.asIndi().email,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0),
-                  )),
-            ],
-          ),
-          ListTile(
-            title: Text(
-              'Education',
-              style: TextStyle(fontSize: 18.0),
+    print(App.ent.asIndi().picture);
+    return SingleChildScrollView(
+      child: Column(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
+        Padding(
+            padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 10.0),
+            child: Row(
+              children: <Widget>[
+                new Container(
+                    width: 96.0,
+                    height: 96.0,
+                    decoration: new BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: new DecorationImage(fit: BoxFit.fill, image: new NetworkImage('https://upload.wikimedia.org/wikipedia/commons/d/dc/Profile-jose-bermudez.jpg')))),
+                Padding(
+                    padding: EdgeInsets.only(left: 20.0, top: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        PaddedText(
+                          App.ent.asIndi().name,
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0),
+                        ),
+                        PaddedText(App.ent.asIndi().email),
+                        PaddedText(App.ent.asIndi().mobile)
+                      ],
+                    )),
+              ],
+            )),
+        Padding(
+            padding: EdgeInsets.only(top: 10.0),
+            child: ListTile(
+              leading: Icon(Icons.help),
+              title: PaddedText(
+                'Bio',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18.0),
+              ),
+              subtitle: PaddedText(App.ent.asIndi().about),
+            )),
+        Padding(
+            padding: EdgeInsets.only(top: 10.0),
+            child: ListTile(
+              leading: Icon(Icons.school),
+              title: PaddedText(
+                'Education',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18.0),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[PaddedText(App.ent.asIndi().edu[1]), PaddedText(App.ent.asIndi().edu[0])],
+              ),
+            )),
+        Padding(
+            padding: EdgeInsets.only(top: 10.0),
+            child: ListTile(
+              leading: Icon(Icons.work),
+              title: PaddedText(
+                'Experiance',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18.0),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[PaddedText(App.ent.asIndi().exp[0]), PaddedText(App.ent.asIndi().exp[1]), PaddedText(App.ent.asIndi().exp[2])],
+              ),
+            )),
+        Padding(
+            padding: EdgeInsets.only(top: 10.0),
+            child: ListTile(
+              leading: Icon(Icons.settings),
+              title: PaddedText(
+                'Skills',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18.0),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[PaddedText(App.ent.asIndi().skills[0]), PaddedText(App.ent.asIndi().skills[1]), PaddedText(App.ent.asIndi().skills[2])],
+                  ),
+                  Row(
+                    children: <Widget>[PaddedText(App.ent.asIndi().skills[3])],
+                  )
+                ],
+              ),
+            )),
+        Padding(
+          padding: EdgeInsets.only(top: 10.0),
+          child: ListTile(
+            leading: Icon(Icons.language),
+            title: PaddedText(
+              'Languages',
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18.0),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[Text('High School'), Text('Bachelor'), Text('Masters')],
+              children: <Widget>[
+                Row(
+                  children: <Widget>[PaddedText(App.ent.asIndi().languages[0]), PaddedText(App.ent.asIndi().languages[1]), PaddedText(App.ent.asIndi().languages[2])],
+                ),
+              ],
             ),
           ),
-        ]));
+        ),
+      ]),
+    );
+  }
+}
+
+class PaddedText extends StatelessWidget {
+  final String t;
+  final double p;
+  final TextStyle style;
+  PaddedText(this.t, {Key key, this.p = 5.0, this.style}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(p),
+      child: Text(
+        t,
+        style: style,
+      ),
+    );
   }
 }
 
@@ -160,9 +262,8 @@ class WorkInfoScreen extends StatelessWidget {
           return FloatingActionButton(
             backgroundColor: Colors.green,
             child: Text('Apply'),
-            onPressed: (){
+            onPressed: () {
               Scaffold.of(context).showSnackBar(new SnackBar(content: new Text('You applied for this work.')));
-
             },
           );
         },
@@ -187,23 +288,25 @@ class WorkInfoScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: new FutureBuilder<Work>(
-          future: fetchOneWork(work),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.none:
-              case ConnectionState.waiting:
-                return CircularProgressIndicator();
-              default:
-                if (snapshot.hasError)
-                  return new Text('Error: ${snapshot.error}');
-                else {
-                  print("Work fetching DONE.");
+      body: SingleChildScrollView(
+        child: new FutureBuilder<Work>(
+            future: fetchOneWork(work),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                case ConnectionState.waiting:
+                  return CircularProgressIndicator();
+                default:
+                  if (snapshot.hasError)
+                    return new Text('Error: ${snapshot.error}');
+                  else {
+                    print("Work fetching DONE.");
 
-                  return WorkPage(work: work);
-                }
-            }
-          }),
+                    return WorkPage(work: work);
+                  }
+              }
+            }),
+      ),
     );
   }
 }
@@ -288,10 +391,6 @@ class WorkPage extends StatelessWidget {
                         title: Text('Details'),
                         subtitle: Text(work.description),
                       )),
-//            ListTile(
-//              title: Text('Experiance needed'),
-//              subtitle: Text(work.exp),
-//            ),
                 ],
               ),
             )
@@ -344,20 +443,35 @@ class Individual extends Entity {
   String name;
   String mobile;
   String email;
-  List<String> edu;
-  List<String> skills;
-  List<String> exp;
-  List<String> languages;
+  List<dynamic> edu;
+  List<dynamic> skills;
+  List<dynamic> exp;
+  List<dynamic> languages;
   String cv;
   String about;
   String picture;
   String id;
 
-  Individual({this.name, this.email, this.about, this.picture});
+  Individual({this.name, this.email, this.about, this.picture, this.mobile, this.edu, this.skills, this.exp, this.languages, this.cv, this.id});
 
   @override
   Individual asIndi() {
     return this;
+  }
+
+  factory Individual.fromJson(Map<String, dynamic> json) {
+    return Individual(
+      email: json['email'],
+      name: json['name'],
+      picture: json['picture'],
+      about: json['bio'],
+      mobile: json['mobile'].toString(),
+      edu: json['education'],
+      skills: json['skills'],
+      exp: json['experience'],
+      languages: json['languages'],
+      cv: json['cv'],
+    );
   }
 }
 
@@ -385,7 +499,9 @@ Future<Entity> fetchEntity() async {
   var data = json.decode(response.body);
   var type = data['type'];
   if (type == 'ind') {
-    var ind = Individual(email: App.ent.email, name: data['name'], picture: data['picture']);
+    print(data);
+    var ind = Individual.fromJson(data);
+    print(ind.mobile);
     ind.token = App.ent.token;
 
     App.ent = ind;
@@ -480,6 +596,7 @@ class WorkItem extends StatelessWidget {
           Navigator.push(context, MaterialPageRoute(builder: (context) => WorkInfoScreen(work: job)));
         },
         child: Card(
+          color: Colors.white10,
           child: Padding(
               padding: EdgeInsets.all(10.0),
               child: Column(
@@ -511,7 +628,7 @@ class WorkItem extends StatelessWidget {
                           padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),
                           child: Text(
                             job.type,
-                            style: TextStyle(fontSize: 18.0, color: Colors.yellow),
+                            style: TextStyle(fontSize: 18.0, color: Colors.green),
                           )),
                       Padding(
                           padding: EdgeInsets.only(left: 10.0, bottom: 10.0, right: 10.0),

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2c0d9b46-1615-459e-a3fb-be8798e8baf9" name="Default" comment="Work list done">
+    <list default="true" id="2c0d9b46-1615-459e-a3fb-be8798e8baf9" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/lib/main.dart" afterPath="$PROJECT_DIR$/lib/main.dart" />
     </list>
@@ -21,8 +21,8 @@
       <file leaf-file-name="main.dart" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/main.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="440">
-              <caret line="38" column="11" lean-forward="true" selection-start-line="38" selection-start-column="11" selection-end-line="38" selection-end-column="11" />
+            <state relative-caret-position="206">
+              <caret line="624" column="22" lean-forward="true" selection-start-line="624" selection-start-column="22" selection-end-line="624" selection-end-column="22" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -55,12 +55,17 @@
       <find>FutureBuilder</find>
       <find>workinfoscree</find>
       <find>workinfosc</find>
-      <find>profile</find>
       <find>entity</find>
       <find>avata</find>
       <find>picture</find>
       <find>print</find>
       <find>workpage</find>
+      <find>profilescreen</find>
+      <find>indivi</find>
+      <find>individ</find>
+      <find>profile</find>
+      <find>profileScreen</find>
+      <find>yell</find>
     </findStrings>
   </component>
   <component name="FlutterPreviewView" splitter-proportion="0.3895954" />
@@ -434,7 +439,14 @@
       <option name="project" value="LOCAL" />
       <updated>1533667795090</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Work done">
+      <created>1533703864583</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1533703864583</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -498,7 +510,8 @@
     <MESSAGE value="Communications established with the server" />
     <MESSAGE value="Login ui" />
     <MESSAGE value="Work list done" />
-    <option name="LAST_COMMIT_MESSAGE" value="Work list done" />
+    <MESSAGE value="Work done" />
+    <option name="LAST_COMMIT_MESSAGE" value="Work done" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -919,8 +932,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/main.dart">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="440">
-          <caret line="38" column="11" lean-forward="true" selection-start-line="38" selection-start-column="11" selection-end-line="38" selection-end-column="11" />
+        <state relative-caret-position="206">
+          <caret line="624" column="22" lean-forward="true" selection-start-line="624" selection-start-column="22" selection-end-line="624" selection-end-column="22" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>
